@@ -6,8 +6,8 @@ router.get('/', (req, res) => {
   res.send('Hey! It works!');
 });
 
-router.get('/reverse/:name', (req, res) => {
-  console.log(res);
+router.get('/reverse', (req, res) => {
+  res.send('Hey! Reverse works!');
 })
 
 module.exports = router;
