@@ -6,9 +6,11 @@ router.get('/', (req, res) => {
   res.send('Hey! It works!');
 });
 
-router.get('/reverse/:name', (req, res) => {
-  const reversed = [...req.params.name].reverse().join('');
-  res.send(reversed);
-});
+<<<<<<< HEAD
+=======
+router.get('/reverse', (req, res) => {
+  res.send('Hey! Reverse works!');
+})
+>>>>>>> d33fe28e240a8dcb326e9b2de27e124495aced84
 
 module.exports = router;
