@@ -8,6 +8,7 @@ const storeController = require('../controllers/storecontroller')
 // res.render();
 
 router.get('/', storeController.homePage);
+router.get('/add', storeController.addStore);
 
 
 module.exports = router;
