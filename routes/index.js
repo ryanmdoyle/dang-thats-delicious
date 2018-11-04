@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const storeController = require('../controllers/storecontroller')
+const storeController = require('../controllers/storeController')
+
+const { catchErrors } = require('../handlers/errorHandlers');
 
 // Do work here
 // res.send();
@@ -9,6 +11,7 @@ const storeController = require('../controllers/storecontroller')
 
 router.get('/', storeController.homePage);
 router.get('/add', storeController.addStore);
+router.post('/add', catchErrors(storeController.createStore));
 
 
 module.exports = router;
