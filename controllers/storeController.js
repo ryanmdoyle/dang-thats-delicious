@@ -25,3 +25,12 @@ exports.editStore = async (req, res) => {
   const store = await Store.findOne({ _id: req.params.id })
   res.render('editStore', { title: `Edit ${store.name}`, store}) //store is really like {store: store} but in es6 you can just put name
 }
+
+exports.updateStore = async (req, res) => {
+  const store = await Store.findOneAndUpdate({ _id: req.params.id }, req.body, {
+    new: true, //returns a new store instread of a new one
+    runValidators: true
+  }).exec();
+  req.flash('Success', `Successfully updated ${store.name}. <a href="/store/${store.slug}">View store -></a>`);
+  res.redirect(`/stores/${store._id}/edit`);
+}
