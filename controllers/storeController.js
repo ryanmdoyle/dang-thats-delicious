@@ -68,3 +68,9 @@ exports.updateStore = async (req, res) => {
   req.flash('Success', `Successfully updated ${store.name}. <a href="/store/${store.slug}">View store -></a>`);
   res.redirect(`/stores/${store._id}/edit`);
 }
+
+exports.getStoreBySlug = async (req, res, next) => { //need next so you can pass on to a middleware after routes if there is no store.
+  const store = await Store.findOne({ slug: req.params.slug});
+  if (!store) return next(); // if there is no store, it will pass on to the next app.use middleware (error handler).
+  res.render('store', { title: `${store.name}`, store: store });
+}

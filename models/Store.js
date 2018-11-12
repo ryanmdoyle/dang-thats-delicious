@@ -35,13 +35,19 @@ const storeSchema = new mongoose.Schema({
   photo: String
 });
 
-storeSchema.pre('save', function(next) {
+storeSchema.pre('save', async function(next) {
   if (!this.isModified('name')) {
     next(); //skip if not modified
     return; //exit the function
   }
   this.slug = slug(this.name);
-  next();
+  //find other store that have similar names
+  const slugRegEx = new RegExp(`^(${this.slug})((-[0-9]*$)?)$`, 'i'); //regext to check for store-1, store-2, etc.
+  const storesWithSlug = await this.constructor.find({ slug: slugRegEx }); // creates array of store with a store-1, store-2, etc. end
+  if(storesWithSlug.length) { //if the above array has a length, there are multiple stores with the name and it needs to be appended
+    this.slug = `${this.slug}-${storesWithSlug.length + 1}`
+  }
+  next(); //go on to next middleware
 })
 
 module.exports = mongoose.model('Store', storeSchema);
