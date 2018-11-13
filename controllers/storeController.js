@@ -74,3 +74,13 @@ exports.getStoreBySlug = async (req, res, next) => { //need next so you can pass
   if (!store) return next(); // if there is no store, it will pass on to the next app.use middleware (error handler).
   res.render('store', { title: `${store.name}`, store: store });
 }
+
+exports.getStoresByTag = async (req, res) => {
+  const tag = req.params.tag;
+  const tagQuery = tag || { $exists: true }; //Uses tag param, unless it does not exits, then it gets all stores where any tag exists
+  const tagsPromise = Store.getTagsList();
+  const storesPromise = Store.find({ tags : tagQuery });
+  const [tags, stores] = await Promise.all([tagsPromise, storesPromise]); //awaits all the things in the array (so it does both async, but wait until both return on their own)
+  // above uses es6 destructuring to immediately assign all the results in the following array to variables.
+  res.render('tags', { tag, tags, stores }); //same as { tag: tag, tags: tags, stores: stores}
+}
