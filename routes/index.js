@@ -35,8 +35,4 @@ router.post('/add/:id',
   catchErrors(storeController.updateStore)
 );
 
-
-
-
-
 module.exports = router;
