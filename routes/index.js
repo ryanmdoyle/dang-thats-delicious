@@ -33,6 +33,7 @@ router.post('/add/:id',
 router.get('/login', userController.loginForm);
 router.get('/register', userController.registerForm);
 router.get('/logout', authController.logout);
+router.get('/account', userController.account)
 
 router.post('/register', 
   userController.validateRegister,
