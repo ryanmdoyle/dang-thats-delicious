@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const storeController = require('../controllers/storeController');
 const userController = require('../controllers/userController');
+const authController = require('../controllers/authController');
 
 const { catchErrors } = require('../handlers/errorHandlers'); //handles functions of async/await functions
 
@@ -19,6 +20,8 @@ router.get('/tags/:tag', catchErrors(storeController.getStoresByTag));
 
 // Users
 router.get('/login', userController.loginForm);
+router.get('/register', userController.registerForm);
+router.get('/logout', authController.logout);
 
 //// POST REQUESTS
 ////
@@ -33,6 +36,12 @@ router.post('/add/:id',
   storeController.upload, 
   catchErrors(storeController.resize),
   catchErrors(storeController.updateStore)
+);
+
+router.post('/register', 
+  userController.validateRegister,
+  catchErrors(userController.register),
+  authController.login
 );
 
 module.exports = router;
