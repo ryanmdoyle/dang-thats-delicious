@@ -1,6 +1,6 @@
 import '../sass/style.scss';
 
 import { $, $$ } from './modules/bling';
-import autoComplete from './modules/autoComplete';
+import autocomplete from './modules/autocomplete';
 
-autoComplete( $('#address'), $('#lat'), $('#lng'));
+autocomplete( $('#address'), $('#lat'), $('#lng') );

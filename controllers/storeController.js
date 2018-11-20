@@ -43,6 +43,7 @@ exports.resize = async (req, res, next) => {
 };
 
 exports.createStore = async (req, res) => {
+  req.body.author = req.user._id; 
   const store = await (new Store(req.body)).save();
   req.flash('success', `Successfully Created ${store.name}. Care to leave a review?`);
   res.redirect(`/store/${store.slug}`);
@@ -54,11 +55,17 @@ exports.getStores = async (req, res) => {
   res.render('stores', { title: 'Stores', stores });
 };
 
+const confirmOwner = (store, user) => {
+  if (!store.author.equals(user._id)) {
+    throw Error('You must own the store in order to edit it!'); //when used below, if it doesn't work it will throw and error that would trigger middleware
+  }
+}
+
 exports.editStore = async (req, res) => {
   // 1. Find the store given the ID
   const store = await Store.findOne({ _id: req.params.id });
   // 2. confirm they are the owner of the store
-  // TODO
+  confirmOwner(store, req.user)
   // 3. Render out the edit form so the user can update their store
   res.render('editStore', { title: `Edit ${store.name}`, store });
 };
@@ -77,7 +84,8 @@ exports.updateStore = async (req, res) => {
 };
 
 exports.getStoreBySlug = async (req, res, next) => {
-  const store = await Store.findOne({ slug: req.params.slug });
+  // calling .populate below will not only find the store, but it ALSO get the linked author info
+  const store = await Store.findOne({ slug: req.params.slug }).populate('author');
   if (!store) return next();
   res.render('store', { store, title: store.name });
 };
@@ -91,5 +99,5 @@ exports.getStoresByTag = async (req, res) => {
   const [tags, stores] = await Promise.all([tagsPromise, storesPromise]);
 
 
-  res.render('tag', { tags, title: 'Tags', tag, stores });
+  res.render('tags', { tags, title: 'Tags', tag, stores });
 };
