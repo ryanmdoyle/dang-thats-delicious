@@ -101,6 +101,17 @@ exports.getStoresByTag = async (req, res) => {
   res.render('tags', { tags, title: 'Tags', tag, stores });
 };
 
-exports.searchStores = (req, res) => {
-  res.json(req.query);
+exports.searchStores = async (req, res) => { // /api/search
+  const stores = await Store.find({
+    $text: {
+      $search: req.query.q
+    }
+  }, {
+    score: { $meta: 'textScore' } //a metadata projection in mongo that counts the word count
+  })
+  .sort({
+    score: { $meta: 'textScore'} //sorts by increasing meta textScore
+  })
+  .limit(5); //limits to 5 results
+  res.json(stores);
 };
