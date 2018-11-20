@@ -6,81 +6,90 @@ const uuid = require('uuid');
 
 const multerOptions = {
   storage: multer.memoryStorage(),
-  fileFiler: function(req, file, next) {
+  fileFilter(req, file, next) {
     const isPhoto = file.mimetype.startsWith('image/');
-    if (isPhoto) {
+    if(isPhoto) {
       next(null, true);
     } else {
-      next({ message: "That file type is not allowed!"}, false);
+      next({ message: 'That filetype isn\'t allowed!' }, false);
     }
   }
 };
 
 exports.homePage = (req, res) => {
   res.render('index');
-}
+};
 
 exports.addStore = (req, res) => {
-  res.render('editStore', {title: "Edit Store"});
-}
+  res.render('editStore', { title: 'Add Store' });
+};
 
 exports.upload = multer(multerOptions).single('photo');
 
 exports.resize = async (req, res, next) => {
-  //check if there is no new file
-  if (!req.file) { 
-    next();  //skip to next middleware
-    return;  //exit if
+  // check if there is no new file to resize
+  if (!req.file) {
+    next(); // skip to the next middleware
+    return;
   }
-  const extension = req.file.mimetype.split('/')[1]; //get extension from file mimetype
-  req.body.photo = `${uuid.v4()}.${extension}`; //uses uuid to give a unique name, then appends extension
-  // now we resize photo
-  const photo = await jimp.read(req.file.buffer); //reads the buffer, which is the photo
-  await photo.resize(800, jimp.AUTO); //when file is read it resizes
-  await photo.write(`./public/uploads/${req.body.photo}`) //when photo is resized it uploads to public folder
-  next(); //moves on to next middleware!
-}
+  const extension = req.file.mimetype.split('/')[1];
+  req.body.photo = `${uuid.v4()}.${extension}`;
+  // now we resize
+  const photo = await jimp.read(req.file.buffer);
+  await photo.resize(800, jimp.AUTO);
+  await photo.write(`./public/uploads/${req.body.photo}`);
+  // once we have written the photo to our filesystem, keep going!
+  next();
+};
 
 exports.createStore = async (req, res) => {
-  const store = await (new Store(req.body)).save(); //save the store to db and returns the store, or error
-  req.flash('success', `Successfully created ${store.name}. Would you like to leave a review?`)
+  const store = await (new Store(req.body)).save();
+  req.flash('success', `Successfully Created ${store.name}. Care to leave a review?`);
   res.redirect(`/store/${store.slug}`);
-}
+};
 
 exports.getStores = async (req, res) => {
+  // 1. Query the database for a list of all stores
   const stores = await Store.find();
-  console.log(stores);
-  res.render('stores', { title: "Stores", stores: stores })
-}
+  res.render('stores', { title: 'Stores', stores });
+};
 
 exports.editStore = async (req, res) => {
-  const store = await Store.findOne({ _id: req.params.id })
-  res.render('editStore', { title: `Edit ${store.name}`, store}) //store is really like {store: store} but in es6 you can just put name
-}
+  // 1. Find the store given the ID
+  const store = await Store.findOne({ _id: req.params.id });
+  // 2. confirm they are the owner of the store
+  // TODO
+  // 3. Render out the edit form so the user can update their store
+  res.render('editStore', { title: `Edit ${store.name}`, store });
+};
 
 exports.updateStore = async (req, res) => {
+  // set the location data to be a point
   req.body.location.type = 'Point';
-  
+  // find and update the store
   const store = await Store.findOneAndUpdate({ _id: req.params.id }, req.body, {
-    new: true, //returns a new store instread of a new one
+    new: true, // return the new store instead of the old one
     runValidators: true
   }).exec();
-  req.flash('Success', `Successfully updated ${store.name}. <a href="/store/${store.slug}">View store -></a>`);
+  req.flash('success', `Successfully updated <strong>${store.name}</strong>. <a href="/stores/${store.slug}">View Store →</a>`);
   res.redirect(`/stores/${store._id}/edit`);
-}
+  // Redriect them the store and tell them it worked
+};
 
-exports.getStoreBySlug = async (req, res, next) => { //need next so you can pass on to a middleware after routes if there is no store.
-  const store = await Store.findOne({ slug: req.params.slug});
-  if (!store) return next(); // if there is no store, it will pass on to the next app.use middleware (error handler).
-  res.render('store', { title: `${store.name}`, store: store });
-}
+exports.getStoreBySlug = async (req, res, next) => {
+  const store = await Store.findOne({ slug: req.params.slug });
+  if (!store) return next();
+  res.render('store', { store, title: store.name });
+};
 
 exports.getStoresByTag = async (req, res) => {
   const tag = req.params.tag;
-  const tagQuery = tag || { $exists: true }; //Uses tag param, unless it does not exits, then it gets all stores where any tag exists
+  const tagQuery = tag || { $exists: true, $ne: [] };
+
   const tagsPromise = Store.getTagsList();
-  const storesPromise = Store.find({ tags : tagQuery });
-  const [tags, stores] = await Promise.all([tagsPromise, storesPromise]); //awaits all the things in the array (so it does both async, but wait until both return on their own)
-  // above uses es6 destructuring to immediately assign all the results in the following array to variables.
-  res.render('tags', { tag, tags, stores }); //same as { tag: tag, tags: tags, stores: stores}
-}
+  const storesPromise = Store.find({ tags: tagQuery });
+  const [tags, stores] = await Promise.all([tagsPromise, storesPromise]);
+
+
+  res.render('tag', { tags, title: 'Tags', tag, stores });
+};

@@ -6,7 +6,7 @@ const storeSchema = new mongoose.Schema({
   name: {
     type: String,
     trim: true,
-    required: 'Please enter a store name.'
+    required: 'Please enter a store name!'
   },
   slug: String,
   description: {
@@ -21,15 +21,15 @@ const storeSchema = new mongoose.Schema({
   location: {
     type: {
       type: String,
-      default: 'point'
+      default: 'Point'
     },
     coordinates: [{
       type: Number,
-      required: 'You must supply coordinates!' // This sets the value to true, and gives a response if it shows as false
+      required: 'You must supply coordinates!'
     }],
     address: {
       type: String,
-      required: "You must supply an address!"
+      required: 'You must supply an address!'
     }
   },
   photo: String
@@ -37,24 +37,25 @@ const storeSchema = new mongoose.Schema({
 
 storeSchema.pre('save', async function(next) {
   if (!this.isModified('name')) {
-    next(); //skip if not modified
-    return; //exit the function
+    next(); // skip it
+    return; // stop this function from running
   }
   this.slug = slug(this.name);
-  //find other store that have similar names
-  const slugRegEx = new RegExp(`^(${this.slug})((-[0-9]*$)?)$`, 'i'); //regext to check for store-1, store-2, etc.
-  const storesWithSlug = await this.constructor.find({ slug: slugRegEx }); // creates array of store with a store-1, store-2, etc. end
-  if(storesWithSlug.length) { //if the above array has a length, there are multiple stores with the name and it needs to be appended
-    this.slug = `${this.slug}-${storesWithSlug.length + 1}`
+  // find other stores that have a slug of wes, wes-1, wes-2
+  const slugRegEx = new RegExp(`^(${this.slug})((-[0-9]*$)?)$`, 'i');
+  const storesWithSlug = await this.constructor.find({ slug: slugRegEx });
+  if (storesWithSlug.length) {
+    this.slug = `${this.slug}-${storesWithSlug.length + 1}`;
   }
-  next(); //go on to next middleware
-})
+  next();
+  // TODO make more resiliant so slugs are unique
+});
 
 storeSchema.statics.getTagsList = function() {
   return this.aggregate([
-    { $unwind: '$tags'}, 
-    { $group: { _id: '$tags', count: { $sum: 1} } },
-    { $sort: { count: 1 } }
+    { $unwind: '$tags' },
+    { $group: { _id: '$tags', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
   ]);
 }
 

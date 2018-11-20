@@ -9,7 +9,7 @@ exports.login = passport.authenticate('local', {
   failureRedirect: '/login',
   failureFlash: 'Failed Login!',
   successRedirect: '/',
-  successFlash: "You are now logged in! 👍"
+  successFlash: 'You are now logged in!'
 });
 
 exports.logout = (req, res) => {
@@ -19,79 +19,78 @@ exports.logout = (req, res) => {
 };
 
 exports.isLoggedIn = (req, res, next) => {
+  // first check if the user is authenticated
   if (req.isAuthenticated()) {
-    next(); //continue because they are logged in.
+    next(); // carry on! They are logged in!
+    return;
   }
-  req.flash('error', 'Oops, you must be logged in to do that!');
+  req.flash('error', 'Oops you must be logged in to do that!');
   res.redirect('/login');
-}
+};
 
 exports.forgot = async (req, res) => {
-  // see if user exists with email
-  //use req.body so they can change the info themselves
-  const user = await User.findOne({ email: req.body.email});
+  // 1. See if a user with that email exists
+  const user = await User.findOne({ email: req.body.email });
   if (!user) {
-    req.flash('error', 'An email has been sent to the email address provided.')
+    req.flash('error', 'No account with that email exists.');
     return res.redirect('/login');
   }
-
-  // set reset tokens and expiration
-  // Uses crypto, which is built in to Node.js
+  // 2. Set reset tokens and expiry on their account
   user.resetPasswordToken = crypto.randomBytes(20).toString('hex');
-  user.resetPasswordExpiry = Date.now() + 3600000; // 1 hr in ms
-  await user.save(); //save the user to db
-  // send email
-  const resetURL = `http://${req.headers.host}.account/reset/${user.resetPasswordToken}`;
-  await mail.send({ //send the additional options needed, in addition to my name and email in mail.js
+  user.resetPasswordExpires = Date.now() + 3600000; // 1 hour from now
+  await user.save();
+  // 3. Send them an email with the token
+  const resetURL = `http://${req.headers.host}/account/reset/${user.resetPasswordToken}`;
+  await mail.send({
     user,
+    filename: 'password-reset',
     subject: 'Password Reset',
-    resetURL,
-    filename: 'password-reset'
-  })
-  req.flash('success', `A temporary password has been emailed to your account.`)
-  // redirect to login
+    resetURL
+  });
+  req.flash('success', `You have been emailed a password reset link.`);
+  // 4. redirect to login page
   res.redirect('/login');
-}
+};
 
 exports.reset = async (req, res) => {
   const user = await User.findOne({
     resetPasswordToken: req.params.token,
-    resetPasswordExpiry: { $gt: Date.now() } // looks for a expire time in the db that greater than the current time (therefore a later time)
+    resetPasswordExpires: { $gt: Date.now() }
   });
-
   if (!user) {
-    req.flash('error', "Oops, you sneaky person! (Token invalid or expired)");
-    res.redirect('/login');
+    req.flash('error', 'Password reset is invalid or has expired');
+    return res.redirect('/login');
   }
-  res.render('reset', { title: 'Reset your password!'} );
-}
+  // if there is a user, show the rest password form
+  res.render('reset', { title: 'Reset your Password' });
+};
 
 exports.confirmedPasswords = (req, res, next) => {
   if (req.body.password === req.body['password-confirm']) {
-    next(); //keep going
+    next(); // keepit going!
     return;
   }
-  req.flash('error', 'Password must match!');
+  req.flash('error', 'Passwords do not match!');
   res.redirect('back');
-}
+};
 
-exports.updatePassword = async (req, res) => {
+exports.update = async (req, res) => {
   const user = await User.findOne({
     resetPasswordToken: req.params.token,
-    resetPasswordExpiry: { $gt: Date.now() } // looks for a expire time in the db that greater than the current time (therefore a later time)
+    resetPasswordExpires: { $gt: Date.now() }
   });
 
   if (!user) {
-    req.flash('error', "Oops, you sneaky person! (Token invalid or expired)");
-    res.redirect('/login');
+    req.flash('error', 'Password reset is invalid or has expired');
+    return res.redirect('/login');
   }
 
-  const setPassword = promisify(user.setPassword, user)
-  await setPassword(req.body.password); //uses the setPassword (now as a promise) to reset;
-  user.resetPasswordToken = undefined; //removed reset stuff
-  user.resetPasswordExpiry = undefined;
-  const updatedUser = await user.save(); //saves updated user
-  await req.login(updatedUser) //.login is a passport method
-  req.flash('success', 'Your password has been reset! 👍 ');
+  const setPassword = promisify(user.setPassword, user);
+  await setPassword(req.body.password);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+  const updatedUser = await user.save();
+  await req.login(updatedUser);
+  req.flash('success', '💃 Nice! Your password has been reset! You are now logged in!');
   res.redirect('/');
-}
+};

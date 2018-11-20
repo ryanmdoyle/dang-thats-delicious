@@ -40,19 +40,20 @@ exports.register = async (req, res, next) => {
 };
 
 exports.account = (req, res) => {
-  res.render('account', { title: "Edit Account" });
-}
+  res.render('account', { title: 'Edit Your Account' });
+};
 
 exports.updateAccount = async (req, res) => {
   const updates = {
     name: req.body.name,
     email: req.body.email
-  }
-  const user = await User.findOneAndUpdate( // takes (query, updates[, options])
-    { _id: req.user._id }, //you take the _is from the req.user rather than the user because the user could be modified in devtools
-    { $set: updates }, // $set adds on to the existing data for the user
-    { new: true, runValidators: true, context: 'query' } //mongoose requires the context to work
+  };
+
+  const user = await User.findOneAndUpdate(
+    { _id: req.user._id },
+    { $set: updates },
+    { new: true, runValidators: true, context: 'query' }
   );
-  req.flash('success', 'Updated the profile! 👍')
-  res.redirect('back'); //back send them to the previous page they came from
-}
+  req.flash('success', 'Updated the profile!');
+  res.redirect('back');
+};

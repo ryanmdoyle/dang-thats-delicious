@@ -21,13 +21,13 @@ const userSchema = new Schema({
     trim: true
   },
   resetPasswordToken: String,
-  resetPasswordExpiry: Date
+  resetPasswordExpires: Date
 });
 
 userSchema.virtual('gravatar').get(function() {
-  const emailHash = md5(this.email); // ma  ke a hash of the users email (of the current user, using this with a traditional func)
-  return `https://gravatar.com/avatar/${emailHash}?s=200`;
-})
+  const hash = md5(this.email);
+  return `https://gravatar.com/avatar/${hash}?s=200`;
+});
 
 userSchema.plugin(passportLocalMongoose, { usernameField: 'email' });
 userSchema.plugin(mongodbErrorHandler);
