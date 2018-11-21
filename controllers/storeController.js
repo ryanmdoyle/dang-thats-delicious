@@ -132,3 +132,4 @@ exports.mapStores = async (req, res) => {
   const stores = await Store.find(q).select('slug name description location')
   res.json(stores);
 }
+//localhost:7777/api/stores/near?lat=43.2&lng=-79.8
