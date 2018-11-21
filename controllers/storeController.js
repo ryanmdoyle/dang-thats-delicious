@@ -115,3 +115,20 @@ exports.searchStores = async (req, res) => { // /api/search
   .limit(5); //limits to 5 results
   res.json(stores);
 };
+
+exports.mapStores = async (req, res) => {
+  const coordinates = [req.query.lng, req.query.lat].map(parseFloat); //maps over and converst from string to float
+  const q = {
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates
+        },
+        $maxDistance: 10000 //10km
+      }
+    }
+  }
+  const stores = await Store.find(q).select('slug name description location')
+  res.json(stores);
+}
