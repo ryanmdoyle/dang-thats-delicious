@@ -41,10 +41,10 @@ const storeSchema = new mongoose.Schema({
 });
 
 //define Index's in mongo db
-// storeSchema.index({ //alows index view the $text search in mongo db
-//   name: 'text',
-//   description: 'text',
-// });
+storeSchema.index({ //alows index view the $text search in mongo db
+  name: 'text',
+  description: 'text',
+});
 
 storeSchema.index({ location: "2dsphere" }); //this crap doesn't work
 

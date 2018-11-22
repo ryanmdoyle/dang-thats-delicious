@@ -129,7 +129,10 @@ exports.mapStores = async (req, res) => {
       }
     }
   }
-  const stores = await Store.find(q).select('slug name description location')
+  const stores = await Store.find(q).select('slug name description location photo') //selects certain fields from query (you can also do -something)
   res.json(stores);
 }
-//localhost:7777/api/stores/near?lat=43.2&lng=-79.8
+
+exports.mapPage = (req, res) => {
+  res.render('map', { title: 'Map' });
+}
