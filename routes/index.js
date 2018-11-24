@@ -51,10 +51,12 @@ router.post('/account/reset/:token',
   catchErrors(authController.update)
 );
 
+router.get('/hearts', catchErrors(storeController.hearts));
 router.get('/map', storeController.mapPage);
 
 // API ENDPOINTS
 router.get('/api/search', catchErrors(storeController.searchStores));
 router.get('/api/stores/near', catchErrors(storeController.mapStores));
+router.post(`/api/stores/:id/heart`, catchErrors(storeController.heartStore));
 
 module.exports = router;

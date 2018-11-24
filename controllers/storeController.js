@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 const Store = mongoose.model('Store');
+const User = mongoose.model('User');
 const multer = require('multer');
 const jimp = require('jimp');
 const uuid = require('uuid');
+
 
 const multerOptions = {
   storage: multer.memoryStorage(),
@@ -59,7 +61,7 @@ const confirmOwner = (store, user) => {
   if (!store.author.equals(user._id)) {
     throw Error('You must own the store in order to edit it!'); //when used below, if it doesn't work it will throw and error that would trigger middleware
   }
-}
+};
 
 exports.editStore = async (req, res) => {
   // 1. Find the store given the ID
@@ -131,8 +133,26 @@ exports.mapStores = async (req, res) => {
   }
   const stores = await Store.find(q).select('slug name description location photo') //selects certain fields from query (you can also do -something)
   res.json(stores);
-}
+};
 
 exports.mapPage = (req, res) => {
   res.render('map', { title: 'Map' });
-}
+};
+
+exports.heartStore = async (req, res) => { //when someone clicks the heart, it goes here with the store id in pparams of URL
+  const hearts = req.user.hearts.map(obj => obj.toString()); //makes array of stores that have hearts by that user
+  const operator = hearts.includes(req.params.id) ? '$pull' : '$addToSet'; // if the store has the heart, remove(pull), if it doesn't add it to user (addtoset)
+  const user = await User.findByIdAndUpdate(
+    req.user.id, //find the current user by id
+    { [operator]: { hearts: req.params.id } }, //$pull or $addToSet the req.params.id (the current store id)
+    { new: true } //return the new user, opposed to what you hade before the update
+  );
+  res.json(user);
+};
+
+exports.hearts = async (req, res) => {
+  const stores = await Store.find({
+    _id: { $in: req.user.hearts } // $in will return any docs in the req.user.hearts array that exists in the _id user.
+  });
+  res.render('stores', { title: "Hearted Stores", stores } );
+};
