@@ -27,4 +27,12 @@ const reviewSchema = new mongoose.Schema({
   }
 });
 
+function autopopulate(next) { //a function to populate the author field, using the .populate method on the model
+  this.populate('author');
+  next();
+}
+
+reviewSchema.pre('find', autopopulate); //these run the autopopulate "hooks" whenever find or findOne is run on this schema
+reviewSchema.pre('findOne', autopopulate);
+
 module.exports = mongoose.model("Review", reviewSchema);
