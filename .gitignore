@@ -2,3 +2,4 @@
 node_modules/
 .env
 variables.env
+variables.env.now
