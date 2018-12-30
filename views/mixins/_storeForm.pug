@@ -7,7 +7,7 @@ mixin storeForm(store = {})
     label(for='photo') Image
       input(type='file' name='photo' id='photo' accept='image/gif, image/png, image/jpeg')
       if store.photo
-        img(src=`/uploads/${sore.photo}`, alt=store.name width=200)
+        img(src=`/uploads/${store.photo}`, alt=store.name width=200)
     //- address, lng and lat
     label(for="address") Address
     //-the && will see if the location exists, and set the value if it does exist
